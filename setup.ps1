@@ -5,17 +5,31 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 # Install Chocolatey
 iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-# Install Git and Python
+# Enable global confirmation for Chocolatey
+choco feature enable -n allowGlobalConfirmation
+
+# Install Git, Python, and NSSM
 choco install git -y
 choco install python -y
+choco install nssm -y
 
-# Install Python dependencies
+# Install required Python packages
 python -m pip install pytz python-dotenv selenium webdriver-manager
 
-# Define desktop path and clone repository
+# Define Desktop path
 $desktop = [Environment]::GetFolderPath('Desktop')
-if (Test-Path "$desktop\propeer_bot") { Remove-Item -Recurse -Force "$desktop\propeer_bot" }
+
+# Clone the repository to Desktop\propeer_bot
 git clone https://github.com/rawift/propeer_bot.git "$desktop\propeer_bot"
 
-# Start the Python script as a background job
-Start-Job -ScriptBlock { python "$desktop\propeer_bot\run_meeting.py" 'https://meet.google.com/wwd-qbgx-xrf' '2025-04-20T18:08:00.000Z' 'abhirawat' }
+# Define the path to the Python script
+$pythonScript = "$desktop\propeer_bot\run_meeting.py"
+
+# Define the service name
+$serviceName = "PropeerBotService"
+
+# Install the Python script as a Windows service using NSSM
+nssm install $serviceName "python" "$pythonScript"
+
+# Start the service
+nssm start $serviceName
